@@ -14,3 +14,17 @@
 
 ### Removido
 - []
+
+## [v1.0.5] - 28/11/2024
+### Adicionado
+- Rodapé tela inicial.
+
+
+### Alterado
+- [Modificado sistema de atualização.]
+
+### Corrigido
+- [Error 404: not foud version. ]
+
+### Removido
+- []

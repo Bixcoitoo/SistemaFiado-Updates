@@ -1,1 +1,16 @@
 
+# Sistema Fiado - Changelog
+
+## [v1.0.4] - 28/11/2024
+### Adicionado
+- Funcionalidade básica de registro de vendas a fiado.
+- Interface para adicionar clientes e registrar vendas e pagina de relatorio.
+
+### Alterado
+- [Modificado sistema de atualização.]
+
+### Corrigido
+- [Error 404: not foud version. ]
+
+### Removido
+- []

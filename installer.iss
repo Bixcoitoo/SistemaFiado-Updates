@@ -19,7 +19,6 @@ Name: "portuguese"; MessagesFile: "compiler:Languages\Portuguese.isl"
 
 [Files]
 Source: "dist\Sistema Fiado.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "version.json"; DestDir: "{app}"; Flags: ignoreversion
 Source: "release.md"; DestDir: "{app}"; Flags: ignoreversion
 
 [Dirs]

@@ -92,7 +92,7 @@ for %%d in (%DIRS%) do (
 )
 
 :: Verificar arquivos necessários
-set "FILES=version.json LICENSE.txt release.md installer.iss"
+set "FILES=LICENSE.txt release.md installer.iss"
 for %%f in (%FILES%) do (
     if not exist "%%f" (
         echo [ERRO] Arquivo '%%f' nao encontrado
@@ -107,6 +107,9 @@ if exist "build" rmdir /s /q "build"
 if exist "Sistema_Fiado_Setup.exe" del /f /q "Sistema_Fiado_Setup.exe"
 
 echo [INFO] Compilando o Sistema Fiado...
+
+:: Sincronizar versões antes de compilar
+python sync_version.py
 
 :: Compilar o executável com PyInstaller
 echo [INFO] Compilando executavel...

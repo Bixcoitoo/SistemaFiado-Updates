@@ -1,4 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
+import subprocess
+subprocess.run(['python', 'sync_version.py'], check=True)
 
 block_cipher = None
 
@@ -10,14 +12,13 @@ a = Analysis(
         ('icons', 'icons'),
         ('views', 'views'),
         ('whatsapp_bot', 'whatsapp_bot'),
-        ('version.json', '.'),
         ('config.json', '.'),
     ],
     hiddenimports=[
-        'PyQt5',
-        'PyQt5.QtCore',
-        'PyQt5.QtGui',
-        'PyQt5.QtWidgets',
+        'PySide6',
+        'PySide6.QtCore',
+        'PySide6.QtGui',
+        'PySide6.QtWidgets',
         'sqlite3',
         'json',
         'datetime',

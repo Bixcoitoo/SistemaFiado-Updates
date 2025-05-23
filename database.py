@@ -7,27 +7,15 @@ import sys
 
 class Database:
     def __init__(self):
-        # Obter o diretório do executável ou do script
-        if getattr(sys, 'frozen', False):
-            # Se estiver rodando como executável
-            self.base_dir = os.path.dirname(sys.executable)
-        else:
-            # Se estiver rodando como script
-            self.base_dir = os.path.dirname(os.path.abspath(__file__))
-            
-        # Criar pasta database se não existir
-        self.database_dir = os.path.join(self.base_dir, 'database')
-        if not os.path.exists(self.database_dir):
-            os.makedirs(self.database_dir)
-            print(f"Pasta database criada em: {self.database_dir}")
-            
-        # Criar pasta backups se não existir
+        # Sempre usar %LOCALAPPDATA%/Sistema Fiado para o banco de dados
+        db_dir = os.path.join(os.environ.get('LOCALAPPDATA', os.path.expanduser('~')), 'Sistema Fiado')
+        os.makedirs(db_dir, exist_ok=True)
+        self.database_dir = db_dir
+        self.database_path = os.path.join(self.database_dir, 'sistema_fiado.db')
         self.backups_dir = os.path.join(self.database_dir, 'backups')
         if not os.path.exists(self.backups_dir):
             os.makedirs(self.backups_dir)
             print(f"Pasta backups criada em: {self.backups_dir}")
-            
-        self.database_path = os.path.join(self.database_dir, 'sistema_fiado.db')
         self.conn = sqlite3.connect(self.database_path)
         # Cache para estrutura das tabelas
         self.cache_estrutura = {}
@@ -40,7 +28,6 @@ class Database:
         self.verificar_tabela_vendas_excluidas()
         # Verificar tabela de notificações
         self.verificar_tabela_notificacoes()
-        
         # Configurar backup automático
         self.configurar_backup_automatico()
     

@@ -79,22 +79,20 @@ class UpdateChecker(QObject):
             return False
 
     def install_update(self, update_file):
-        """Instala a atualização"""
+        """Instala a atualização usando o instalador"""
         try:
             # Criar script de atualização
             script_path = os.path.join(self.temp_dir, "update.bat")
             current_exe = sys.executable
-            update_exe = update_file
+            installer_exe = update_file
 
-            # Criar script batch para atualizar
+            # Criar script batch para executar o instalador
             with open(script_path, 'w') as f:
                 f.write('@echo off\n')
                 f.write('timeout /t 2 /nobreak > nul\n')  # Esperar 2 segundos
-                f.write(f'del "{current_exe}"\n')
-                f.write(f'copy "{update_exe}" "{current_exe}"\n')
-                f.write(f'del "{update_exe}"\n')
-                f.write(f'del "{script_path}"\n')
-                f.write(f'start "" "{current_exe}"\n')
+                f.write(f'taskkill /F /IM "{os.path.basename(current_exe)}"\n')  # Encerrar o programa atual
+                f.write(f'start "" "{installer_exe}"\n')  # Iniciar o instalador
+                f.write(f'del "{script_path}"\n')  # Limpar o script
 
             # Executar script de atualização
             subprocess.Popen(['cmd', '/c', script_path], 
@@ -257,7 +255,63 @@ class UpdateProgressDialog(QProgressDialog):
     def __init__(self, parent=None):
         super().__init__("Baixando atualização...", "Cancelar", 0, 100, parent)
         self.setWindowTitle("Atualização")
-        self.setWindowModality(True)
+        self.setWindowFlags(Qt.Dialog | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.setMinimumDuration(0)
         self.setAutoClose(True)
-        self.setAutoReset(True) 
+        self.setAutoReset(True)
+        self.setObjectName("UpdateProgressDialog")
+        self.setFixedSize(500, 200)
+        self.setStyleSheet("""
+            #UpdateProgressDialog {
+                background-color: #23272f;
+                border-radius: 16px;
+                border: 1.5px solid #3498db;
+            }
+            QLabel {
+                color: #ecf0f1;
+                font-size: 12pt;
+                font-weight: bold;
+            }
+            QProgressBar {
+                border: 2px solid #34495e;
+                border-radius: 8px;
+                text-align: center;
+                background-color: #2c3e50;
+                min-height: 25px;
+            }
+            QProgressBar::chunk {
+                background-color: #3498db;
+                border-radius: 6px;
+            }
+            QPushButton {
+                min-height: 38px;
+                border-radius: 8px;
+                font-weight: bold;
+                padding: 8px 15px;
+                font-size: 11pt;
+                background-color: #34495e;
+                color: white;
+                border: none;
+            }
+            QPushButton:hover {
+                background-color: #435c78;
+            }
+        """)
+        
+        # Centralizar na tela principal
+        if parent:
+            center_point = parent.mapToGlobal(parent.rect().center())
+            self.move(center_point.x() - self.width() // 2, center_point.y() - self.height() // 2)
+
+    def mousePressEvent(self, event):
+        # Não permite arrastar a janela
+        event.ignore()
+
+    def mouseMoveEvent(self, event):
+        # Não permite arrastar a janela
+        event.ignore()
+
+    def mouseReleaseEvent(self, event):
+        # Não permite arrastar a janela
+        event.ignore() 

@@ -1,3 +1,4 @@
+# VERSAO_SISTEMA = '1.0.8'
 import sys
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QHBoxLayout, QPushButton, QLabel, QStackedWidget,
@@ -26,7 +27,7 @@ from views.whatsapp_bot_view import WhatsAppBotView
 from styles import STYLE
 from updater import UpdateChecker, UpdateDialog, UpdateProgressDialog
 
-# Configurar logging
+# Sempre gravar o log em %LOCALAPPDATA%/Sistema Fiado
 log_dir = os.path.join(os.environ.get('LOCALAPPDATA', os.path.expanduser('~')), 'Sistema Fiado')
 os.makedirs(log_dir, exist_ok=True)
 log_path = os.path.join(log_dir, 'whatsapp_bot.log')
@@ -281,12 +282,22 @@ class AnimatedButton(QPushButton):
 
 class SistemaFiado(QMainWindow):
     def __init__(self):
+        # Sempre pega a versão do marcador do main.py
+        version = '1.0.7'  # valor padrão, será atualizado pelo sync_version.py
+        try:
+            with open(__file__, 'r', encoding='utf-8') as f:
+                for line in f:
+                    if line.startswith('# VERSAO_SISTEMA ='):
+                        version = line.split('=')[1].strip().strip("'\"")
+                        break
+        except Exception:
+            pass
+        self.current_version = version
         super().__init__(flags=Qt.FramelessWindowHint)
         self.db = Database()
         self.init_ui()
         self.carregar_configuracoes()
-        # Configurar versão atual
-        self.current_version = "1.0.0"
+        # ATENÇÃO: Mantenha version.json, installer.iss (AppVersion) e releases do GitHub SEMPRE sincronizados!
         # Inicializar verificador de atualizações
         self.update_checker = UpdateChecker(self.current_version)
         self.update_checker.update_available.connect(self.show_update_dialog)
@@ -612,6 +623,24 @@ class SistemaFiado(QMainWindow):
         btn_registrar_venda.style().polish(btn_registrar_venda) 
         btn_relatorios.style().polish(btn_relatorios)
         btn_historico.style().polish(btn_historico)
+        
+        # Rodapé com versão do sistema
+        rodape_frame = QFrame()
+        rodape_frame.setObjectName("RodapePrincipal")
+        rodape_frame.setStyleSheet("""
+            #RodapePrincipal {
+                background-color: #23272f;
+                border-top: 1px solid #34495e;
+            }
+        """)
+        rodape_layout = QHBoxLayout(rodape_frame)
+        rodape_layout.setContentsMargins(0, 8, 20, 8)
+        rodape_layout.addStretch()
+        versao_label = QLabel(f"Versão: {self.current_version}")
+        versao_label.setFont(QFont('Segoe UI', 9, QFont.Bold))
+        versao_label.setStyleSheet("color: #7f8c8d;")
+        rodape_layout.addWidget(versao_label)
+        main_layout.addWidget(rodape_frame)
 
     # Adicionar um manipulador de eventos de teclado para lidar com a tecla ESC
     def eventFilter(self, obj, event):
@@ -659,8 +688,24 @@ class SistemaFiado(QMainWindow):
 
     def show_update_dialog(self, version, date, changelog):
         """Mostra diálogo de atualização disponível"""
+        # Salvar a URL do instalador mais recente para usar no download
+        self._update_url = None
+        # Tenta obter a URL do release do GitHub
+        try:
+            # Busca novamente a info do release para pegar a URL do instalador
+            import requests
+            response = requests.get("https://api.github.com/repos/Bixcoitoo/SistemaFiado-Updates/releases/latest")
+            response.raise_for_status()
+            release_info = response.json()
+            assets = release_info.get('assets', [])
+            for asset in assets:
+                if asset['name'].endswith('_Setup.exe'):  # Busca pelo instalador
+                    self._update_url = asset['browser_download_url']
+                    break
+        except Exception:
+            self._update_url = None
         dialog = UpdateDialog(version, date, changelog, self)
-        if dialog.exec() == QMessageBox.Yes:
+        if dialog.exec():
             self.start_update_download()
 
     def show_update_error(self, message):
@@ -669,9 +714,14 @@ class SistemaFiado(QMainWindow):
 
     def start_update_download(self):
         """Inicia o download da atualização"""
+        if not hasattr(self, '_update_url') or not self._update_url:
+            QMessageBox.critical(self, "Erro de Atualização", "URL do instalador não encontrada!")
+            return
         self.progress_dialog = UpdateProgressDialog(self)
         self.progress_dialog.canceled.connect(self.cancel_update)
         self.progress_dialog.show()
+        # Iniciar o download
+        self.update_checker.download_update(self._update_url)
 
     def update_progress(self, value):
         """Atualiza a barra de progresso"""
@@ -681,6 +731,11 @@ class SistemaFiado(QMainWindow):
     def install_update(self, update_file):
         """Instala a atualização"""
         if hasattr(self, 'progress_dialog'):
+            # Desconecta o sinal para evitar disparar cancel_update ao fechar
+            try:
+                self.progress_dialog.canceled.disconnect(self.cancel_update)
+            except Exception:
+                pass
             self.progress_dialog.close()
         
         if self.update_checker.install_update(update_file):
@@ -705,57 +760,10 @@ class SistemaFiado(QMainWindow):
             QTimer.singleShot(10000, self.check_for_updates)
 
 def main():
-    try:
-        # Verificar se já existe uma instância em execução
-        socket_name = "SistemaFiadoInstance"
-        local_socket = QLocalSocket()
-        local_socket.connectToServer(socket_name)
-        
-        if local_socket.waitForConnected(500):
-            # Se conseguir conectar, significa que já existe uma instância
-            QMessageBox.warning(None, "Aviso", 
-                              "Já existe uma instância do Sistema de Fiado em execução!\n\n"
-                              "Por favor, feche a janela existente antes de abrir uma nova.")
-            local_socket.disconnectFromServer()
-            return
-        
-        # Se não conseguiu conectar, criar um servidor local para esta instância
-        local_server = QLocalServer()
-        local_server.removeServer(socket_name)  # Remove qualquer servidor antigo
-        local_server.listen(socket_name)
-        
-        # Seu código principal aqui
-        app = QApplication(sys.argv)
-        
-        # Definir o ícone usando caminho absoluto
-        icon_path_abs = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'icons', 'ICONE-LOGO.ico')
-        app.setWindowIcon(QIcon(icon_path_abs))
-        
-        # Inicializar e verificar o banco de dados
-        db = Database()
-        
-        # Verificar a estrutura da tabela vendas
-        try:
-            estrutura = db.verificar_estrutura_tabela('vendas')
-            colunas = [col[1] for col in estrutura]  # Nome das colunas
-            
-            # Verifica se a coluna 'valor_unitario' existe
-            if 'valor_unitario' not in colunas:
-                print("AVISO: Coluna 'valor_unitario' não encontrada na tabela vendas.")
-                print("Colunas encontradas:", colunas)
-        except Exception as e:
-            print(f"Erro ao verificar estrutura do banco: {str(e)}")
-        
-        window = SistemaFiado()
-        # Configurar para tela cheia
-        window.showMaximized()
-        
-        # Conectar o sinal aboutToQuit para limpar o servidor local
-        app.aboutToQuit.connect(lambda: local_server.removeServer(socket_name))
-        
-        sys.exit(app.exec())
-    except Exception as e:
-        print(f"Erro ao iniciar aplicação: {str(e)}")
+    app = QApplication(sys.argv)
+    window = SistemaFiado()
+    window.showMaximized()
+    sys.exit(app.exec())
 
 if __name__ == "__main__":
     main() 

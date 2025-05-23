@@ -1,0 +1,34 @@
+Termos de Uso do Sistema Fiado
+
+1. Aceitacao dos Termos
+Ao instalar e usar o Sistema Fiado, voce concorda com estes termos de uso.
+
+2. Licenca de Uso
+O Sistema Fiado e fornecido como software proprietario. Voce tem permissao para:
+- Instalar e usar o software em um unico computador
+- Fazer copias de backup dos seus dados
+- Usar o software para gerenciar seu negocio
+
+3. Restricoes
+Voce nao tem permissao para:
+- Copiar ou distribuir o software
+- Modificar o codigo fonte
+- Usar o software em multiplos computadores sem licencas adicionais
+- Remover ou alterar avisos de copyright
+
+4. Suporte
+O suporte tecnico esta disponivel atraves dos canais oficiais de comunicacao.
+
+5. Limitacao de Responsabilidade
+O software e fornecido "como esta", sem garantias de qualquer tipo.
+
+6. Privacidade
+O Sistema Fiado coleta apenas os dados necessarios para seu funcionamento.
+Todos os dados sao armazenados localmente no seu computador.
+
+7. Atualizacoes
+O sistema pode verificar e baixar atualizacoes automaticamente.
+Voce sera notificado sobre novas versoes disponiveis.
+
+8. Encerramento
+Estes termos podem ser encerrados se voce violar qualquer uma das condicoes. 
